@@ -249,13 +249,16 @@ async function pushWithGit({ git, token, owner, repo, author, message, force, st
   log.info('远端: ' + remoteUrl);
 
   if (storeCredentials) {
-    // 只影响本仓库；token 存在 workspace 内且被 .gitignore 忽略
-    const credFile = path.join(ROOT, '.secrets', '.git-credentials');
-    await fs.mkdir(path.join(ROOT, '.secrets'), { recursive: true });
-    await fs.writeFile(credFile, 'https://x-access-token:' + token + '@github.com\n', { encoding: 'utf8', mode: 0o600 });
-    const rel = path.relative(ROOT, credFile).replace(/\\/g, '/');
-    gitRun(git, ['config', 'credential.helper', 'store --file=' + rel]);
-    log.info('凭据已存: ' + rel + '（之后 git push 无需再输 token）');
+    // 把认证写成本仓库的 http.extraheader：token 不进 remote URL，也不依赖 credential helper
+    const auth = 'AUTHORIZATION: basic ' + b64('x-access-token:' + token);
+    gitRun(git, ['config', 'http.https://github.com/.extraheader', auth]);
+    gitRun(git, ['config', '--unset', 'credential.helper'], { allowFail: true });
+    try {
+      await fs.rm(path.join(ROOT, '.secrets', '.git-credentials'), { force: true });
+    } catch {
+      /* 忽略 */
+    }
+    log.info('GitHub 认证已写入本仓库 .git/config（http.extraheader），之后 git push 无需再输 token');
   }
 
   gitRun(git, ['add', '-A']);

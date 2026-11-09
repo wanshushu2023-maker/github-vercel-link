@@ -13,7 +13,21 @@ const argOf = (name) => {
 
 const result = JSON.parse(await fs.readFile(path.join(ROOT, '.provision-result.json'), 'utf8'));
 const tokens = JSON.parse(await fs.readFile(path.join(ROOT, '.secrets', 'tokens.json'), 'utf8'));
-const expectSha = argOf('--sha') || result.commit;
+
+// 默认用本地 HEAD 作为期望提交（比结果文件里的快照更准），再退回结果文件
+async function localHead() {
+  try {
+    const head = (await fs.readFile(path.join(ROOT, '.git', 'HEAD'), 'utf8')).trim();
+    if (head.startsWith('ref: ')) {
+      return (await fs.readFile(path.join(ROOT, '.git', head.slice(5).trim()), 'utf8')).trim();
+    }
+    return head;
+  } catch {
+    return null;
+  }
+}
+
+const expectSha = argOf('--sha') || (await localHead()) || result.commit;
 const marker = argOf('--marker') || null;
 const H = { Authorization: 'Bearer ' + tokens.vercelToken, 'User-Agent': 'dsh-verify' };
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -65,4 +79,25 @@ log('  生产首页       : HTTP ' + pageRes.status + '  标题标记=' + (title
 
 const ok = shaOk && titleOk && markerOk;
 log('\n结论: ' + (ok ? '链路已验证 ✓ push → 自动部署 → 线上内容更新' : '有检查未通过 ✗'));
+
+// 把最新状态写回结果文件
+await fs.writeFile(
+  path.join(ROOT, '.provision-result.json'),
+  JSON.stringify(
+    {
+      ...result,
+      commit: expectSha,
+      commitShort: expectSha.slice(0, 7),
+      deploymentUrl: dep.url ? 'https://' + dep.url : result.deploymentUrl,
+      deploymentId: dep.uid,
+      deploymentState: dep.readyState,
+      hello,
+      checkedAt: new Date().toISOString()
+    },
+    null,
+    2
+  ) + '\n',
+  'utf8'
+);
+
 process.exit(ok ? 0 : 1);
