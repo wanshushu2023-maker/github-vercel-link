@@ -104,10 +104,35 @@ function summarize(dep) {
   ].join('  ');
 }
 
+// 用 deploy hook 主动触发一次构建：API 创建的 Pages 项目不会自动产生首次部署
+async function triggerDeployHook(token, accountId, project, branch) {
+  let hooks = [];
+  try {
+    hooks = await cf(token, '/accounts/' + accountId + '/pages/projects/' + project + '/deploy_hooks');
+  } catch {
+    hooks = [];
+  }
+  let hook = (hooks || []).find((h) => (h.branch || h.name) === branch) || null;
+  if (!hook) {
+    hook = await cf(token, '/accounts/' + accountId + '/pages/projects/' + project + '/deploy_hooks', {
+      method: 'POST',
+      body: { branch }
+    });
+  }
+  const url = 'https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/' + hook.hook_id;
+  const res = await fetch(url, { method: 'POST', headers: { 'User-Agent': 'dsh-cloudflare-pages' } });
+  const body = await res.text();
+  if (!res.ok) throw new Error('deploy hook 触发失败 HTTP ' + res.status + ': ' + body.slice(0, 200));
+  log.ok('已通过 deploy hook 触发构建');
+  return hook;
+}
+
 async function waitDeployment(token, accountId, project, branch, expectedSha) {
   const deadline = Date.now() + 300000;
   let last = '';
   let seen = null;
+  let triggered = false;
+  let waited = 0;
   while (Date.now() < deadline) {
     let deps = [];
     try {
@@ -135,10 +160,18 @@ async function waitDeployment(token, accountId, project, branch, expectedSha) {
       if (st === 'failure' || st === 'canceled') {
         fail('Cloudflare Pages 部署失败 (' + st + ')，到后台看构建日志: https://dash.cloudflare.com/' + accountId + '/pages/view/' + project);
       }
+    } else if (!triggered && waited >= 15000) {
+      triggered = true;
+      try {
+        await triggerDeployHook(token, accountId, project, branch);
+      } catch (e) {
+        log.warn('触发失败（稍后重试）: ' + e.message);
+      }
     } else {
       log.info('等待首次部署出现…');
     }
     await sleep(5000);
+    waited += 5000;
   }
   fail('等待部署超时（5 分钟）。可到后台查看: https://dash.cloudflare.com/' + accountId + '/pages/view/' + project);
 }

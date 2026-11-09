@@ -1,10 +1,15 @@
 # github-vercel-link
 
-一个**零依赖**的最小项目，用来打通并验证「GitHub 推送 → Vercel 自动部署」这条链路。
+一个**零依赖**的最小项目，用来打通并验证「GitHub 推送 → 自动部署」这条链路，同时接了两个平台。
 
-- 线上地址：<https://github-vercel-link.vercel.app>
+| 平台 | 线上地址 | 函数目录 |
+|---|---|---|
+| Vercel | <https://github-vercel-link.vercel.app> | `api/hello.js` |
+| Cloudflare Pages | <https://github-vercel-link.pages.dev> | `functions/api/hello.js` |
+
 - 仓库：<https://github.com/wanshushu2023-maker/github-vercel-link>
-- Vercel 项目：`github-vercel-link`
+- 一次 `git push`，Vercel 和 Cloudflare Pages 各自自动部署；页面会根据 `/api/hello` 返回的
+  `host` 自动显示当前托管方。
 
 ## 结构
 
@@ -15,7 +20,8 @@
 - `scripts/install-git.mjs`：把便携版 Git（MinGit）装进 `.tools/git`，无需管理员权限
 - `scripts/provision.mjs`：建 GitHub 仓库 → `git push` → 建 Vercel 项目并绑定仓库 → 触发/等待部署
 - `scripts/verify.mjs`：等最新部署 READY，校验线上 `/api/hello` 的 sha 与页面内容
-- `scripts/check-tokens.mjs`：校验 `.secrets/tokens.json` 里的两个 token
+- `scripts/cloudflare-pages.mjs`：建 Pages 项目、绑定 GitHub 仓库、触发首次部署、验证线上函数
+- `scripts/check-tokens.mjs`：校验 `.secrets/tokens.json` 里的 token
 
 ## 本地运行
 

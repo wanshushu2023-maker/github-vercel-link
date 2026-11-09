@@ -73,7 +73,7 @@ log('  sha 一致       : ' + (shaOk ? '✓' : '✗ (' + hello.gitSha + ' vs ' +
 
 const pageRes = await fetch(base + '/', { headers: { 'Cache-Control': 'no-cache' } });
 const html = await pageRes.text();
-const titleOk = html.includes('GitHub → Vercel');
+const titleOk = html.includes('GitHub →') && html.includes('id="hostTitle"');
 const markerOk = marker ? html.includes(marker) : true;
 log('  生产首页       : HTTP ' + pageRes.status + '  标题标记=' + (titleOk ? '✓' : '✗') + (marker ? '  内容标记(' + marker + ')=' + (markerOk ? '✓' : '✗') : ''));
 

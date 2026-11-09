@@ -1,6 +1,6 @@
 {
   "name": "github-vercel-link",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "GitHub push -> Vercel auto deploy demo (static site + one serverless function, zero dependencies)",
   "scripts": {
