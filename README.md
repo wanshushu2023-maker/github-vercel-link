@@ -23,6 +23,7 @@
 - `scripts/cloudflare-pages.mjs`：建 Pages 项目、绑定 GitHub 仓库、触发首次部署、验证线上函数
 - `scripts/health.mjs`：一键体检（git/仓库/token/两个平台部署/本地预览，共 21 项）
 - `scripts/sync-deploy.mjs`：GitHub webhook 丢失时，用官方 API 强制把两个平台部署到当前 HEAD
+- `scripts/inventory.mjs`：列出账号下的域名、站点（Vercel / Cloudflare Pages / GitHub 仓库）
 - `scripts/check-tokens.mjs`：校验 `.secrets/tokens.json` 里的 token
 
 ## 本地运行

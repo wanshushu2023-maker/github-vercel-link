@@ -9,3 +9,4 @@ DS_Store
 assets/
 
 .cloudflare-result.json
+.inventory.json
