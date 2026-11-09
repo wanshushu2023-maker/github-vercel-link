@@ -165,6 +165,13 @@ footer {
   font-variant-numeric: tabular-nums;
 }
 
+footer .ver {
+  margin-left: 10px;
+  padding-left: 10px;
+  border-left: 1px solid var(--line);
+  opacity: 0.75;
+}
+
 @media (max-width: 620px) {
   .chain { flex-direction: column; }
   .arrow { justify-content: center; transform: rotate(90deg); }
