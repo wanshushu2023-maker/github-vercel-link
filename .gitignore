@@ -10,3 +10,4 @@ assets/
 
 .cloudflare-result.json
 .inventory.json
+.domains.json

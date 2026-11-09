@@ -24,6 +24,7 @@
 - `scripts/health.mjs`：一键体检（git/仓库/token/两个平台部署/本地预览，共 21 项）
 - `scripts/sync-deploy.mjs`：GitHub webhook 丢失时，用官方 API 强制把两个平台部署到当前 HEAD
 - `scripts/inventory.mjs`：列出账号下的域名、站点（Vercel / Cloudflare Pages / GitHub 仓库）
+- `scripts/domains.mjs`：Cloudflare 域名 + DNS 记录诊断，交叉比对自定义域名，`--fix` 自动补缺失 CNAME
 - `scripts/check-tokens.mjs`：校验 `.secrets/tokens.json` 里的 token
 
 ## 本地运行
