@@ -1,0 +1,10 @@
+.secrets/
+.tokens.json
+.vercel/
+node_modules/
+.tools/
+*.log
+DS_Store
+.provision-result.json
+assets/
+

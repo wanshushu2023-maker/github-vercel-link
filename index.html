@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description" content="GitHub 推送后由 Vercel 自动部署的演示页面" />
+  <title>GitHub → Vercel · 自动部署已打通</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <main class="wrap">
+    <header class="hero">
+      <span class="dot" id="dot" aria-hidden="true"></span>
+      <h1>GitHub → Vercel</h1>
+      <p class="sub">每次 push 到 <code>main</code>，Vercel 自动构建并发布这一页。</p>
+    </header>
+
+    <section class="chain" aria-label="部署链路">
+      <div class="node">
+        <span class="label">Source</span>
+        <strong>GitHub</strong>
+        <small id="repo">等待部署信息…</small>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node">
+        <span class="label">Build &amp; Host</span>
+        <strong>Vercel</strong>
+        <small id="proj">静态站点 + Serverless</small>
+      </div>
+      <div class="arrow">→</div>
+      <div class="node ok">
+        <span class="label">Status</span>
+        <strong>Production</strong>
+        <small>online</small>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-head">
+        <h2><code>/api/hello</code></h2>
+        <button id="refresh" type="button">重新检测</button>
+      </div>
+      <p class="hint">这个响应来自 Vercel Serverless Function，其中的 git 字段是 Vercel 在构建时从 GitHub 提交注入的。</p>
+      <pre id="out">正在请求…</pre>
+    </section>
+
+    <footer>
+      <span id="status">—</span>
+    </footer>
+  </main>
+
+  <script>
+    const out = document.getElementById('out');
+    const dot = document.getElementById('dot');
+    const statusEl = document.getElementById('status');
+    const repoEl = document.getElementById('repo');
+
+    async function check() {
+      out.textContent = '正在请求…';
+      statusEl.textContent = '—';
+      try {
+        const res = await fetch('/api/hello', { cache: 'no-store' });
+        const data = await res.json();
+        out.textContent = JSON.stringify(data, null, 2);
+        statusEl.textContent = 'HTTP ' + res.status + ' · ' + (data.where || 'unknown') +
+          ' · ' + new Date().toLocaleString();
+        dot.classList.add('ok');
+        if (data.gitRepo) repoEl.textContent = data.gitOwner + '/' + data.gitRepo;
+      } catch (err) {
+        out.textContent = String(err);
+        statusEl.textContent = '请求失败：/api/hello 不可达';
+        dot.classList.remove('ok');
+      }
+    }
+
+    document.getElementById('refresh').addEventListener('click', check);
+    check();
+  </script>
+</body>
+</html>
