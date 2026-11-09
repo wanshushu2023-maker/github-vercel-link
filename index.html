@@ -4,15 +4,15 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="description" content="GitHub 推送后由 Vercel 自动部署的演示页面" />
-  <title>GitHub → Vercel · 自动部署已打通</title>
+  <title>GitHub → 自动部署 · 已打通</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <main class="wrap">
     <header class="hero">
       <span class="dot" id="dot" aria-hidden="true"></span>
-      <h1>GitHub → Vercel</h1>
-      <p class="sub">每次 push 到 <code>main</code>，Vercel 自动构建并发布这一页。</p>
+      <h1>GitHub → <span id="hostTitle">Vercel</span></h1>
+      <p class="sub">每次 push 到 <code>main</code>，平台自动构建并发布这一页。</p>
     </header>
 
     <section class="chain" aria-label="部署链路">
@@ -24,7 +24,7 @@
       <div class="arrow">→</div>
       <div class="node">
         <span class="label">Build &amp; Host</span>
-        <strong>Vercel</strong>
+        <strong id="hostName">Vercel</strong>
         <small id="proj">静态站点 + Serverless</small>
       </div>
       <div class="arrow">→</div>
@@ -55,6 +55,8 @@
     const dot = document.getElementById('dot');
     const statusEl = document.getElementById('status');
     const repoEl = document.getElementById('repo');
+    const hostNameEl = document.getElementById('hostName');
+    const hostTitleEl = document.getElementById('hostTitle');
 
     async function check() {
       out.textContent = '正在请求…';
@@ -67,6 +69,11 @@
           ' · ' + new Date().toLocaleString();
         dot.classList.add('ok');
         if (data.gitRepo) repoEl.textContent = data.gitOwner + '/' + data.gitRepo;
+        if (data.host) {
+          hostNameEl.textContent = data.host;
+          hostTitleEl.textContent = data.host;
+          document.title = 'GitHub → ' + data.host + ' · 自动部署已打通';
+        }
       } catch (err) {
         out.textContent = String(err);
         statusEl.textContent = '请求失败：/api/hello 不可达';

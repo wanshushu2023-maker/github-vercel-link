@@ -8,3 +8,4 @@ DS_Store
 .provision-result.json
 assets/
 
+.cloudflare-result.json

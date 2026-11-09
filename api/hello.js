@@ -14,6 +14,7 @@ module.exports = function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store, max-age=0');
   res.status(200).json({
     ok: true,
+    host: 'Vercel',
     message: 'GitHub 提交已由 Vercel 自动部署',
     where: 'Vercel Serverless Function',
     now: new Date().toISOString(),
