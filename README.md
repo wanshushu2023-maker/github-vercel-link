@@ -21,6 +21,7 @@
 - `scripts/provision.mjs`：建 GitHub 仓库 → `git push` → 建 Vercel 项目并绑定仓库 → 触发/等待部署
 - `scripts/verify.mjs`：等最新部署 READY，校验线上 `/api/hello` 的 sha 与页面内容
 - `scripts/cloudflare-pages.mjs`：建 Pages 项目、绑定 GitHub 仓库、触发首次部署、验证线上函数
+- `scripts/health.mjs`：一键体检（git/仓库/token/两个平台部署/本地预览，共 21 项）
 - `scripts/check-tokens.mjs`：校验 `.secrets/tokens.json` 里的 token
 
 ## 本地运行
@@ -53,6 +54,15 @@ node scripts/verify.mjs --marker "build v1.0.1"
 
 它会等本地 HEAD 对应的部署 READY，再检查线上 `/api/hello` 的 `gitSha` 是否等于本地
 HEAD、首页是否包含指定内容标记。
+
+## 一键体检
+
+```bash
+node scripts/health.mjs
+```
+
+检查：git 是否可用、仓库状态、三个 token 是否有效、两个平台是否已部署当前 HEAD、
+线上 `/api/hello` 的 sha 是否与本地一致、本地预览服务器能否启动。
 
 ## 首次打通（已执行过，留作复现）
 
