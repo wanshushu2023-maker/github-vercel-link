@@ -469,9 +469,10 @@ function handleGitHubIntegrationError(e) {
 }
 
 async function triggerDeployment(token, projectId, projectName, repoId, sha) {
-  log.info('未检测到部署，主动用 gitSource 触发一次…');
+  log.info('未检测到自动部署，主动用 gitSource 触发一次…');
   try {
-    const dep = await vercel(token, '/v13/deployments', {
+    // API 建的项目不会自动产生首次部署；skipAutoDetectionConfirmation 让 Vercel 跳过框架检测确认
+    const dep = await vercel(token, '/v13/deployments?skipAutoDetectionConfirmation=1', {
       method: 'POST',
       body: {
         name: projectName,
@@ -480,7 +481,7 @@ async function triggerDeployment(token, projectId, projectName, repoId, sha) {
         gitSource: { type: 'github', ref: 'main', sha, repoId: String(repoId) }
       }
     });
-    log.ok('已触发部署: ' + (dep.url || dep.id));
+    log.ok('已触发部署: ' + (dep.url || dep.id || dep.uid));
     return dep;
   } catch (e) {
     log.warn('主动触发失败: ' + e.message);
@@ -493,10 +494,16 @@ async function waitForDeployment(token, projectId, commitSha, projectName, repoI
   let last = '';
   let triggered = false;
   let waited = 0;
+  let baseline = null;
   while (Date.now() < deadline) {
     const list = await vercel(token, '/v6/deployments?projectId=' + projectId + '&limit=10');
     const deps = list.deployments || [];
-    const dep = deps.find((d) => d.meta?.githubCommitSha === commitSha) || null;
+    if (!baseline) baseline = new Set(deps.map((d) => d.uid));
+    // 优先精确匹配本次推送的 commit；否则接受触发后新出现的 main 分支部署
+    const dep =
+      deps.find((d) => d.meta?.githubCommitSha === commitSha) ||
+      deps.find((d) => !baseline.has(d.uid) && (d.meta?.githubCommitRef === 'main' || !d.meta?.githubCommitSha)) ||
+      null;
     if (dep) {
       if (dep.readyState !== last) {
         last = dep.readyState;
@@ -506,7 +513,7 @@ async function waitForDeployment(token, projectId, commitSha, projectName, repoI
       if (dep.readyState === 'ERROR' || dep.readyState === 'CANCELED') {
         fail('Vercel 部署失败 (' + dep.readyState + ')，构建日志: ' + (dep.inspectorUrl || 'https://vercel.com/' + projectName));
       }
-    } else if (!triggered && waited > 40000) {
+    } else if (!triggered && waited >= 12000) {
       triggered = true;
       await triggerDeployment(token, projectId, projectName, repoId, commitSha);
     }
