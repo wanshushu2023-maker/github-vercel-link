@@ -22,6 +22,7 @@
 - `scripts/verify.mjs`：等最新部署 READY，校验线上 `/api/hello` 的 sha 与页面内容
 - `scripts/cloudflare-pages.mjs`：建 Pages 项目、绑定 GitHub 仓库、触发首次部署、验证线上函数
 - `scripts/health.mjs`：一键体检（git/仓库/token/两个平台部署/本地预览，共 21 项）
+- `scripts/sync-deploy.mjs`：GitHub webhook 丢失时，用官方 API 强制把两个平台部署到当前 HEAD
 - `scripts/check-tokens.mjs`：校验 `.secrets/tokens.json` 里的 token
 
 ## 本地运行
@@ -54,6 +55,20 @@ node scripts/verify.mjs --marker "build v1.0.1"
 
 它会等本地 HEAD 对应的部署 READY，再检查线上 `/api/hello` 的 `gitSha` 是否等于本地
 HEAD、首页是否包含指定内容标记。
+
+## 当 push 没有自动部署时
+
+GitHub 偶发降级（<https://www.githubstatus.com> 显示 *Partially Degraded Service*）时，
+push 的 webhook 可能丢失，两个平台都不会自动构建。此时不用重新改代码，直接强制同步：
+
+```bash
+node scripts/sync-deploy.mjs              # 两个平台一起
+node scripts/sync-deploy.mjs --only vercel
+node scripts/sync-deploy.mjs --only cloudflare
+```
+
+脚本会用 Vercel 的 `gitSource` 部署和 Cloudflare 的 deploy hook 主动触发构建，
+并校验线上 `/api/hello` 的 sha 是否等于本地 HEAD。
 
 ## 一键体检
 
